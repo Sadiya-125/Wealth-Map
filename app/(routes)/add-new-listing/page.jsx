@@ -20,11 +20,15 @@ const AddNewListing = () => {
   const nextHandler = async () => {
     try {
       setLoader(true);
-      const res = await fetch("/api/scrape", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: selectedAddress }),
-      });
+
+      const res = await fetch(
+        "https://wealth-map-backend-m9ew.onrender.com/api/scrape",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address: selectedAddress }),
+        }
+      );
 
       const { listings } = await res.json();
 
@@ -91,8 +95,10 @@ const AddNewListing = () => {
         router.replace("/edit-listing/" + data[0].id);
       }
     } catch (err) {
-      console.error(err);
-      toast("Something Went Wrong");
+      console.error("Error details:", err);
+      const errorMessage =
+        err?.message || err?.response?.statusText || "Something Went Wrong";
+      toast(errorMessage);
     } finally {
       setLoader(false);
     }
