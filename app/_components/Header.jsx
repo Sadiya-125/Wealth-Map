@@ -60,12 +60,6 @@ const Header = () => {
                 For Sale
               </li>
             </Link>
-            <li className="hover:text-primary font-medium text-sm cursor-pointer">
-              For Rent
-            </li>
-            <li className="hover:text-primary font-medium text-sm cursor-pointer">
-              Agent Finder
-            </li>
           </ul>
         )}
       </div>
@@ -73,7 +67,7 @@ const Header = () => {
         {isSignedIn && userInfo?.status === "Accepted" && (
           <Link href={"/add-new-listing"}>
             <Button className="gap-2 text-white hidden md:flex">
-              <Plus className="h-5 w-5" /> Post Your Ad
+              <Plus className="h-5 w-5" /> Search Listings
             </Button>
             <Button className="text-white md:hidden p-2 h-10 w-10 justify-center">
               <Plus className="h-5 w-5" />
