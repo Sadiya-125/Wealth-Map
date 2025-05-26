@@ -36,44 +36,6 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## API Documentation
-
-### POST /api/scrape
-
-This endpoint accepts a JSON body with an `address` field and returns real estate listings scraped by a Python script.
-
-- **Request Body:**
-
-```json
-{
-  "address": "string"
-}
-```
-
-- **Response:**
-  - Success (200):
-  ```json
-  {
-    "listings": [
-      /* array of listing objects */
-    ]
-  }
-  ```
-  - Missing address (400):
-  ```json
-  {
-    "message": "Address is Required",
-    "listings": []
-  }
-  ```
-  - Script error or JSON parse error (500):
-  ```json
-  {
-    "message": "Python Script Error" | "Failed to Parse JSON",
-    "listings": []
-  }
-  ```
-
 ## Features
 
 - Real estate listings scraping via Python script
