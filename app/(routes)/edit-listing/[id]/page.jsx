@@ -48,26 +48,26 @@ const EditListing = () => {
   const router = useRouter();
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isVerifying, setIsVerifying] = useState(true);
+  const [isVerifying, setIsVerifying] = useState(false); //true
 
-  const verifyUserRecord = async () => {
-    const { data, error } = await supabase
-      .from("listing")
-      .select("*")
-      .eq("createdBy", user?.primaryEmailAddress.emailAddress)
-      .eq("id", id);
+  // const verifyUserRecord = async () => {
+  //   const { data, error } = await supabase
+  //     .from("listing")
+  //     .select("*")
+  //     .eq("createdBy", user?.primaryEmailAddress.emailAddress)
+  //     .eq("id", id);
 
-    if (!data || data.length === 0) {
-      toast.error("Access Denied: External Listing");
-      router.replace("/");
-    } else {
-      setIsVerifying(false);
-    }
-  };
+  //   if (!data || data.length === 0) {
+  //     toast.error("Access Denied: External Listing");
+  //     router.replace("/");
+  //   } else {
+  //     setIsVerifying(false);
+  //   }
+  // };
 
-  useEffect(() => {
-    user && verifyUserRecord();
-  }, [user]);
+  // useEffect(() => {
+  //   user && verifyUserRecord();
+  // }, [user]);
 
   useEffect(() => {
     const fetchListing = async () => {
