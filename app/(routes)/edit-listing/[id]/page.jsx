@@ -7,10 +7,27 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Link from "next/link";
-import { ArrowLeft, Link as LinkIcon, Share2 } from "lucide-react";
+
+import {
+  ArrowLeft,
+  FileQuestion,
+  Link as LinkIcon,
+  Share2,
+} from "lucide-react";
 import { CustomChartToolTipContent } from "../../../_components/CustomChartToolTipContent";
 import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
+import { askPropertyQuestion } from "../../../../lib/property-question";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+import { Textarea } from "@/components/ui/textarea";
 
 import {
   ChartContainer,
@@ -48,26 +65,10 @@ const EditListing = () => {
   const router = useRouter();
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isVerifying, setIsVerifying] = useState(false); //true
-
-  // const verifyUserRecord = async () => {
-  //   const { data, error } = await supabase
-  //     .from("listing")
-  //     .select("*")
-  //     .eq("createdBy", user?.primaryEmailAddress.emailAddress)
-  //     .eq("id", id);
-
-  //   if (!data || data.length === 0) {
-  //     toast.error("Access Denied: External Listing");
-  //     router.replace("/");
-  //   } else {
-  //     setIsVerifying(false);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   user && verifyUserRecord();
-  // }, [user]);
+  const [questionLoading, setQuestionLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -86,10 +87,10 @@ const EditListing = () => {
       setLoading(false);
     };
 
-    if (id && !isVerifying) fetchListing();
-  }, [id, isVerifying]);
+    if (id) fetchListing();
+  }, [id]);
 
-  if (loading || isVerifying) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-white mt-[-150]">
         <div className="flex flex-col items-center space-y-4">
@@ -201,16 +202,125 @@ const EditListing = () => {
     }
   };
 
+  const handleAsk = async () => {
+    if (!question.trim()) {
+      toast.error("Please Enter a Question");
+      return;
+    }
+
+    setAnswer("");
+    setQuestionLoading(true);
+
+    try {
+      const { output } = await askPropertyQuestion(question, listing.id);
+      setAnswer(output);
+    } catch (error) {
+      console.error("Error Asking Question:", error);
+      toast.error("Failed to Ask Question");
+    } finally {
+      setQuestionLoading(false);
+    }
+  };
+
   return (
-    <div id="page-content" className="container mx-auto p-6">
+    <div className="container mx-auto p-6">
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>{listing.address}</DialogTitle>
+            <DialogDescription>{formattedDate}</DialogDescription>
+          </DialogHeader>
+
+          <p className="text-gray-600">
+            {listing.coordinates
+              ? `Coordinates: ${listing.coordinates.lat}, ${listing.coordinates.lon}`
+              : "No Coordinates Available"}
+          </p>
+          <blockquote className="mt-2 border-l-4 border-gray-300 bg-gray-50 p-4">
+            <span className="text-sm text-gray-600">
+              {listing.createdBy
+                ? `Owned by ${listing.agent_name}`
+                : "Created by Unknown"}
+            </span>
+            <p className="leading-relaxed font-medium text-gray-900 italic">
+              {listing.description.substring(0, 500) + "..."}
+            </p>
+          </blockquote>
+
+          <div className="mt-2 space-y-2">
+            <label className="text-sm font-medium text-gray-900">
+              Ask for Further Clarification...
+            </label>
+            <Textarea
+              placeholder="What did you mean by..."
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              className="mt-2"
+            />
+            <p className="text-muted-foreground text-xs">
+              Wealth Map has context about this Property and it&apos;s Owner.
+            </p>
+          </div>
+
+          {questionLoading ? (
+            <div className="space-y-2 mt-4">
+              <p className="text-sm font-semibold">Generating Answer...</p>
+              <div className="space-y-2 animate-pulse">
+                <div className="h-4 w-3/4 rounded bg-gray-200" />
+                <div className="h-4 w-full rounded bg-gray-200" />
+                <div className="h-4 w-5/6 rounded bg-gray-200" />
+              </div>
+            </div>
+          ) : (
+            answer && (
+              <div className="text-md whitespace-pre-wrap mt-4">
+                <p className="text-sm font-semibold">Answer</p>
+                {answer}
+              </div>
+            )
+          )}
+
+          <div className="flex justify-end">
+            <Button onClick={handleAsk} disabled={questionLoading}>
+              Ask Question
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <Card className="bg-card shadow-xl rounded-2xl p-6">
         <CardHeader>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-[-5]">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-4 mb-[-5]">
             <CardTitle className="text-3xl font-extrabold tracking-tight">
               Property Details
             </CardTitle>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-3">
+              <div className="flex items-center bg-muted rounded-full px-1.5 py-1.5 shadow-sm hover:shadow-md transition-shadow cursor-default text-sm md:text-md">
+                <div className="flex flex-col justify-center">
+                  <Button
+                    onClick={() => setOpen(true)}
+                    variant="outline"
+                    className="bg-transparent hover:bg-muted border-none shadow-none w-10 h-10 rounded-full md:ml-0 ml-10 flex items-center justify-center"
+                  >
+                    <FileQuestion className="w-10 h-10 text-primary" />
+                    <p className="md:hidden">Ask</p>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center bg-muted rounded-full px-1.5 py-1.5 shadow-sm hover:shadow-md transition-shadow cursor-default text-sm md:text-md">
+                <div className="flex flex-col justify-center">
+                  <Button
+                    onClick={handleShare}
+                    variant="outline"
+                    className="bg-transparent hover:bg-muted border-none shadow-none w-10 h-10 rounded-full md:ml-0 ml-10 flex items-center justify-center"
+                  >
+                    <Share2 className="w-10 h-10 text-primary" />
+                    <p className="md:hidden">Share</p>
+                  </Button>
+                </div>
+              </div>
+
               <div className="flex items-center space-x-3 bg-muted rounded-md px-3 py-2 shadow-sm hover:shadow-md transition-shadow cursor-default text-sm md:text-md">
                 <div className="w-5 h-5 flex items-center justify-center text-primary">
                   <Calendar className="w-5 h-5" />
@@ -220,18 +330,6 @@ const EditListing = () => {
                     Created At
                   </Label>
                   <p className="font-medium text-sm">{formattedDate}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center bg-muted rounded-full px-1.5 py-1.5 shadow-sm hover:shadow-md transition-shadow cursor-default text-sm md:text-md">
-                <div className="flex flex-col justify-center">
-                  <Button
-                    onClick={handleShare}
-                    variant="outline"
-                    className="bg-transparent hover:bg-muted border-none shadow-none w-10 h-10 rounded-full p-0 flex items-center justify-center"
-                  >
-                    <Share2 className="w-10 h-10 text-primary" />
-                  </Button>
                 </div>
               </div>
             </div>
