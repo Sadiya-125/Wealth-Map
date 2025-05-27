@@ -7,6 +7,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Link from "next/link";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 import {
   ArrowLeft,
@@ -222,6 +224,155 @@ const EditListing = () => {
     }
   };
 
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF("p", "pt", "a4");
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const padding = 40;
+    const contentWidth = pageWidth - padding * 2;
+
+    let y = padding;
+
+    const addTextBlock = (label, value) => {
+      if (!value) return;
+
+      doc.setFont("helvetica", "bold");
+      doc.text(`${label}:`, padding, y);
+      doc.setFont("helvetica", "normal");
+
+      const lines = doc.splitTextToSize(`${value}`, contentWidth - 120);
+      doc.text(lines, padding + 150, y);
+      y += lines.length * 20;
+
+      if (y > doc.internal.pageSize.getHeight() - padding) {
+        doc.addPage();
+        y = padding;
+      }
+    };
+
+    function finishTextAndSave() {
+      addTextBlock("Address", listing.address);
+      addTextBlock(
+        "Coordinates",
+        `${listing.coordinates?.lat}, ${listing.coordinates?.lon}`
+      );
+      addTextBlock("Bounding Box", listing.boundingBox);
+      addTextBlock("Created By", listing.createdBy);
+      addTextBlock("Property URL", listing.property_url);
+      addTextBlock("MLS", listing.mls);
+      addTextBlock("MLS ID", listing.mls_id);
+      addTextBlock("Status", listing.status);
+      addTextBlock("Style", listing.style);
+      addTextBlock("Bedrooms", listing.bedroom);
+      addTextBlock("Bathrooms", listing.bathroom);
+      addTextBlock("Area", `${listing.area} sqft`);
+      addTextBlock("Built In", listing.builtIn);
+      addTextBlock("Days on MLS", listing.days_on_mls);
+      addTextBlock("Price", `$${listing.price}`);
+      addTextBlock("Sold Price", `$${listing.sold_price}`);
+      addTextBlock("Assessed Value", `$${listing.assessed_value}`);
+      addTextBlock("Estimated Value", `$${listing.estimated_value}`);
+      addTextBlock("Tax", `$${listing.tax}`);
+      addTextBlock("New Construction", listing.new_construction ? "Yes" : "No");
+      addTextBlock("Lot Size", `${listing.lotSize} Acres`);
+      addTextBlock("Price per Sqft", `$${listing.price_per_sqft}`);
+      addTextBlock("Neighborhoods", listing.neighborhoods);
+      addTextBlock("County", listing.county);
+      addTextBlock("FIPS Code", listing.fips_code);
+      addTextBlock("Stories", listing.stories);
+      addTextBlock("HOA", listing.hoa);
+      addTextBlock("Parking", listing.parking);
+      addTextBlock("Agent Name", listing.agent_name);
+      addTextBlock("Agent Email", listing.agent_email);
+      addTextBlock("Agent MLS Set", listing.agent_mls_set);
+      addTextBlock("Broker Name", listing.broker_name);
+      addTextBlock("Office Name", listing.office_name);
+      addTextBlock("Office Email", listing.office_email);
+      addTextBlock("Nearby Schools", listing.nearby_schools);
+      addTextBlock("Description", listing.description);
+
+      if (listing.agent_phones) {
+        const phones = listing.agent_phones
+          .map((p) => `${p.type}: ${p.number}`)
+          .join("\n");
+        addTextBlock("Agent Phones", phones);
+      }
+
+      if (listing.office_phones) {
+        const phones = listing.office_phones
+          .map((p) => `${p.type}: ${p.number}`)
+          .join("\n");
+        addTextBlock("Office Phones", phones);
+      }
+      doc.save(
+        `${
+          listing.address?.split(",").slice(0, 3).join(",") || "Property"
+        }_Details.pdf`
+      );
+    }
+
+    function renderPhotosThenContinue() {
+      let x = padding;
+      let rowY = y;
+
+      if (listing.primary_photo) {
+        const primary = new Image();
+        primary.crossOrigin = "anonymous";
+        primary.src = listing.primary_photo;
+
+        primary.onload = () => {
+          doc.text("Primary Photo", padding, y - 10);
+          doc.addImage(primary, "JPEG", x, rowY, 200, 150);
+          y = rowY + 160;
+
+          if (listing.alt_photos) {
+            const alt = listing.alt_photos.split(", ").slice(0, 6);
+            let altX = padding;
+            let altY = y + 30;
+            doc.text("Alternative Photos", padding, altY - 10);
+
+            let loaded = 0;
+
+            alt.forEach((url, idx) => {
+              const img = new Image();
+              img.crossOrigin = "anonymous";
+              img.src = url;
+              img.onload = () => {
+                doc.addImage(img, "JPEG", altX, altY, 100, 75);
+                altX += 110;
+                if ((idx + 1) % 3 === 0) {
+                  altX = padding;
+                  altY += 85;
+                }
+                loaded++;
+                if (loaded === alt.length) {
+                  y = altY + 50;
+                  finishTextAndSave();
+                }
+              };
+              img.onerror = () => {
+                loaded++;
+                if (loaded === alt.length) {
+                  y = altY + 50;
+                  finishTextAndSave();
+                }
+              };
+            });
+          } else {
+            finishTextAndSave();
+          }
+        };
+
+        primary.onerror = () => {
+          finishTextAndSave();
+        };
+      } else {
+        finishTextAndSave();
+      }
+    }
+
+    renderPhotosThenContinue();
+  };
+
   return (
     <div className="container mx-auto p-6">
       <Dialog open={open} onOpenChange={setOpen}>
@@ -295,6 +446,19 @@ const EditListing = () => {
             </CardTitle>
 
             <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-3">
+              <div className="flex items-center bg-muted rounded-md px-1.5 py-1.5 shadow-sm hover:shadow-md transition-shadow cursor-default text-sm md:text-md">
+                <div className="flex flex-col justify-center">
+                  <Button
+                    onClick={handleDownloadPDF}
+                    variant="outline"
+                    className="bg-transparent hover:bg-muted border-none shadow-none w-30 h-10 flex items-center justify-center"
+                  >
+                    <p className="text-primary font-semibold">
+                      Download as PDF
+                    </p>
+                  </Button>
+                </div>
+              </div>
               <div className="flex items-center bg-muted rounded-full px-1.5 py-1.5 shadow-sm hover:shadow-md transition-shadow cursor-default text-sm md:text-md">
                 <div className="flex flex-col justify-center">
                   <Button
