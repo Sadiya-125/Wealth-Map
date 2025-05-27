@@ -47,21 +47,13 @@ const Header = () => {
 
   return (
     <div className="p-6 px-10 flex justify-between shadow-sm fixed top-0 w-full z-50 bg-white">
-      <div className="flex gap-12 items-center">
-        <Image src="/logo.png" width={40} height={40} alt="Logo" />
-        {isSignedIn && userInfo?.status === "Accepted" && (
-          <ul className="hidden md:flex gap-10">
-            <Link href={"/"}>
-              <li
-                className={`hover:text-primary font-medium text-sm cursor-pointer ${
-                  path == "/" && "text-primary"
-                }`}
-              >
-                For Sale
-              </li>
-            </Link>
-          </ul>
-        )}
+      <div className="flex gap-4 items-center ml-4">
+        <Link href={"/"} className="flex items-center gap-5">
+          <Image src="/logo.png" width={40} height={40} alt="Logo" />
+          <span className="hidden md:inline text-primary font-semibold text-lg">
+            Wealth Map
+          </span>
+        </Link>
       </div>
       <div className="flex gap-4 items-center">
         {isSignedIn && userInfo?.status === "Accepted" && (

@@ -12,6 +12,7 @@ import autoTable from "jspdf-autotable";
 
 import {
   ArrowLeft,
+  Download,
   FileQuestion,
   Link as LinkIcon,
   Share2,
@@ -321,47 +322,10 @@ const EditListing = () => {
 
         primary.onload = () => {
           doc.text("Primary Photo", padding, y - 10);
-          doc.addImage(primary, "JPEG", x, rowY, 200, 150);
-          y = rowY + 160;
-
-          if (listing.alt_photos) {
-            const alt = listing.alt_photos.split(", ").slice(0, 6);
-            let altX = padding;
-            let altY = y + 30;
-            doc.text("Alternative Photos", padding, altY - 10);
-
-            let loaded = 0;
-
-            alt.forEach((url, idx) => {
-              const img = new Image();
-              img.crossOrigin = "anonymous";
-              img.src = url;
-              img.onload = () => {
-                doc.addImage(img, "JPEG", altX, altY, 100, 75);
-                altX += 110;
-                if ((idx + 1) % 3 === 0) {
-                  altX = padding;
-                  altY += 85;
-                }
-                loaded++;
-                if (loaded === alt.length) {
-                  y = altY + 50;
-                  finishTextAndSave();
-                }
-              };
-              img.onerror = () => {
-                loaded++;
-                if (loaded === alt.length) {
-                  y = altY + 50;
-                  finishTextAndSave();
-                }
-              };
-            });
-          } else {
-            finishTextAndSave();
-          }
+          doc.addImage(primary, "JPEG", x, rowY, 515, 300);
+          y = rowY + 335;
+          finishTextAndSave();
         };
-
         primary.onerror = () => {
           finishTextAndSave();
         };
@@ -369,7 +333,6 @@ const EditListing = () => {
         finishTextAndSave();
       }
     }
-
     renderPhotosThenContinue();
   };
 
@@ -446,16 +409,15 @@ const EditListing = () => {
             </CardTitle>
 
             <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-3">
-              <div className="flex items-center bg-muted rounded-md px-1.5 py-1.5 shadow-sm hover:shadow-md transition-shadow cursor-default text-sm md:text-md">
+              <div className="flex items-center bg-muted rounded-full px-1.5 py-1.5 shadow-sm hover:shadow-md transition-shadow cursor-default text-sm md:text-md">
                 <div className="flex flex-col justify-center">
                   <Button
                     onClick={handleDownloadPDF}
                     variant="outline"
-                    className="bg-transparent hover:bg-muted border-none shadow-none w-30 h-10 flex items-center justify-center"
+                    className="bg-transparent hover:bg-muted border-none shadow-none w-10 h-10 rounded-full md:ml-0 ml-10 flex items-center justify-center"
                   >
-                    <p className="text-primary font-semibold">
-                      Download as PDF
-                    </p>
+                    <Download className="w-10 h-10 text-primary" />
+                    <p className="md:hidden">Download</p>
                   </Button>
                 </div>
               </div>
@@ -535,7 +497,17 @@ const EditListing = () => {
             MapPin
           )}
           {fieldDisplay("Coordinates", coordinates, MapPin)}
-          {fieldDisplay("Created By", listing.createdBy, User)}
+          {fieldDisplay(
+            "Created By",
+            <a
+              href={`mailto:${listing.createdBy}`}
+              className="text-blue-600 underline break-words break-all max-w-full block"
+              style={{ overflowWrap: "break-word" }}
+            >
+              {listing.createdBy}
+            </a>,
+            User
+          )}
           {fieldDisplay("MLS", listing.mls, Layers)}
           {fieldDisplay("MLS ID", listing.mls_id, Layers)}
           {fieldDisplay("Days on MLS", listing.days_on_mls, Calendar)}
@@ -586,7 +558,17 @@ const EditListing = () => {
 
           {fieldDisplay("Agent MLS Set", listing.agent_mls_set, Layers)}
           {fieldDisplay("Agent Name", listing.agent_name, User)}
-          {fieldDisplay("Agent Email", listing.agent_email, Mail)}
+          {fieldDisplay(
+            "Agent Email",
+            <a
+              href={`mailto:${listing.agent_email}`}
+              className="text-blue-600 underline break-words break-all max-w-full block"
+              style={{ overflowWrap: "break-word" }}
+            >
+              {listing.agent_email}
+            </a>,
+            Mail
+          )}
           {fieldDisplay(
             "Agent Phones",
             parsePhones(listing.agent_phones),
@@ -597,7 +579,17 @@ const EditListing = () => {
 
           {fieldDisplay("Office MLS Set", listing.office_mls_set, Layers)}
           {fieldDisplay("Office Name", listing.office_name, Building2)}
-          {fieldDisplay("Office Email", listing.office_email, Mail)}
+          {fieldDisplay(
+            "Office Email",
+            <a
+              href={`mailto:${listing.office_email}`}
+              className="text-blue-600 underline break-words break-all max-w-full block"
+              style={{ overflowWrap: "break-word" }}
+            >
+              {listing.office_email}
+            </a>,
+            Mail
+          )}
           {fieldDisplay(
             "Office Phones",
             parsePhones(listing.office_phones),
