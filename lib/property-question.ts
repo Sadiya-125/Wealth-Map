@@ -3,7 +3,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { supabase } from "../utils/supabase/client";
 
 const google = createGoogleGenerativeAI({
-  apiKey: "AIzaSyBn0lJnLfRhAsij6TWT68sv31ZY0HI-vMU",
+  apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY,
 });
 
 export async function askPropertyQuestion(question: string, listingId: string) {
