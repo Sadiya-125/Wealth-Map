@@ -130,7 +130,7 @@ const CompanyDetails = () => {
       }
 
       toast.success("Company and Admin Created Successfully");
-      router.push("/");
+      window.location.href = "/";
     } catch (err) {
       console.error(err);
       toast.error("Unexpected Error Occurred");

@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Header = () => {
-  const path = usePathname();
   const { user, isSignedIn } = useUser();
   const [isAdmin, setIsAdmin] = useState(false);
   const [userInfo, setUserInfo] = useState();
